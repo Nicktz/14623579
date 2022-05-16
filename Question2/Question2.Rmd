@@ -1,0 +1,149 @@
+---
+title: "Paged HTML Document"
+author: "NF Katzke"
+date: "November 2021"
+# date: "`r Sys.Date()`"
+bibliography: Tex/ref.bib       # Do not edit: Keep this naming convention and location.
+output:
+  pagedown::html_paged:
+    # template: wp_paged.html
+    # css: ['wp.css', 'wp-fonts.css', 'wp-page.css']
+    css: ["Template/default-fonts-Texevier.css", "Template/default-page-Texevier.css", "Template/default-Texevier.css"]
+    csl: Template/harvard-stellenbosch-university.csl # referencing format used.
+    template: ["Template/paged-Texevier.html"]
+
+    toc: true
+    # change to true for a self-contained document, but it'll be a litte slower for Pandoc to render
+    self_contained: TRUE
+abstract: |
+    This is an abstract. Much can be written here. Uncomment this line to go without an abstract.
+    Abstracts have no spaces, but can have bullets.
+
+    Bullets can be created as follows
+
+    + You can add bullets, but do not add colons please.
+
+    + Line breaks are also not permitted.
+
+---
+
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.width = 6, fig.height = 5)
+
+options(dplyr.summarise.inform=F)
+
+if(!require("tidyverse")) install.packages("tidyverse")
+library(tidyverse)
+
+list.files('code/', full.names = T, recursive = T) %>% as.list() %>% walk(~source(.))
+# Source Question 1's code too ()for plot_order function) - note ..// here means go up one level from current folder
+list.files('..//Question1/code/', full.names = T, recursive = T) %>% as.list() %>% walk(~source(.))
+
+# Data loading:
+    Loc <- "data/Wine/"
+    dff <- read_rds(glue::glue("{Loc}WineMag.rds"))
+    Fruitlist <- read_table("data/wine/Fruitlist.txt")
+    froots <- Fruitlist$Fruits  %>% unique %>% as.list()
+    CountryList <- c("South Africa", "Italy", "France", "US", "Spain")
+
+    dff_adj <- dff %>% filter(country %in% CountryList)
+
+
+```
+
+
+# Overview
+
+In this report, we look at what Sommeliers prefer globally, and specifically the frequency with which references to fruity flavours are made.
+
+Important note - some of the chunks take long to build. You can add cache=TRUE to the top part of a chunk - which means unless you adjust the chunk's code in any way, it will save the output and load it quickly. This makes building your pdf quicker.
+
+
+We will also consider the local wine reviews from two prominent critics.
+
+### Fruit reference count
+
+In order to get insight into how often fruits are mentioned in reviews, and also which fruits are mentioned most - we collated a list of fruits and sought to identify the ....
+
+We see that Plums are most referenced, with critics in Spain most regularly referencing fruits in their reviews:
+
+```{r,  warning =  FALSE, fig.align = 'center', fig.cap = "References to Fruits by Sommeliers\\label{Figure1}", fig.ext = 'png', fig.height = 5, fig.width = 7}
+
+# Count fruit references, by mapping the Fruit_extractor function across the different fruitlist 
+# Remember ~ before function:
+fruit_count <- froots %>% map_df(~Fruit_extractor(dff_adj, froots = .))
+g <- First_fruits_plot(fruit_count, xaxis_rows = 2, xaxis_size = 5)
+g
+```
+
+
+
+```{r}
+# grepl needs "|", e.g. grepl("X|Y|Z", string)
+collapsed_fruitlist <- paste(Fruitlist$Fruits, collapse = "|")
+
+N_Refs_Fruit <- dff_adj %>% filter(!country %in% "Spain") %>% summarise(N = sum(grepl( collapsed_fruitlist, description))/ n()) %>% pull(N)
+
+N_Refs_Fruit_spain <- dff_adj %>% filter(country %in% "Spain") %>% summarise(N = sum(grepl( collapsed_fruitlist, description))/ n()) %>% pull(N)
+
+```
+
+For the following, I used my discretion and added some further insight into the fruit referncing exercise. This could've been a plot, but let's practice referencing in text.
+
+Spanish wines have far greater references to fruit, at `r round(N_Refs_Fruit_spain*100, 3)`%  of references mentioning fruits, compared to 
+`r round(N_Refs_Fruit*100, 2)`% of reviews for `r glue::glue_collapse( CountryList[!grepl("Spain", CountryList)], sep = ", ", last = " and ")`.
+
+### Referencing certain terms
+
+Some text some text some text
+
+Here is the table I asked for. Carefully note the code for doing this. I commented out some code and added the Tab_Span_Page function for if you were using Texevier.
+
+Texevier's tables can be more involved as it loads various Latex packages to make nicer tables. For other Latex templates, you may not be able to produce similar tables - so for this we stick to plain old xtable - but take note of my commented out suggestions.
+
+```{r, results = 'asis'}
+Term_refs_table(dff_adj)
+
+```
+
+Of course, you could do more with Table \ref{tab1}, but I just want to get you started above.
+
+
+Lastly, let's look at South Africa in a new section.
+
+# South Africa
+
+```{r,  warning =  FALSE, fig.align = 'center', fig.cap = "Local Wine Reviews: Top Wineries locally.\\label{Figure2}", fig.ext = 'png', fig.height = 5, fig.width = 7}
+
+Tasters <- c( "Lauren Buzzeo" , "Susan Kostrzewa")
+df_SA <-
+    dff %>% filter(country %in% "South Africa", price > 50, taster_name %in% Tasters)
+
+gg <- Top_5_Wineries_SA_Plot(df_SA, Tasters)
+gg
+```
+
+From Figure \ref{Figure2}, note the most preferred wineries. You can discuss a bit further here.
+
+```{r}
+Corr <- 
+df_SA %>% filter(price > 10) %>% 
+  group_by(taster_name) %>% summarise(Corr = cor(price, points, method = "spearman", use = "pairwise.complete.obs"))
+
+```
+
+In terms of correlations, note the correlations between prices and reviews for Lauren Buzzeo (`r Corr %>% slice(1) %>% pull(Corr) %>% round(.,3)*100`%) and Susan Kostrzewa (`r Corr %>% slice(2) %>% pull(Corr) %>% round(.,3)*100`%).
+
+
+We can further run regressions on what determines determines points based on our dataset. You can now add a few sentences describing this a bit.
+
+```{r,  warning =  FALSE, fig.align = 'center', fig.cap = "Local point determinants.\\label{Figure3}", fig.ext = 'png', fig.height = 5, fig.width = 7}
+
+Regression_Plot(df_SA)
+
+```
+
+Figure \ref{Figure3} can be discussed here in more detail.
+
+
