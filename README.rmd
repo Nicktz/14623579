@@ -173,3 +173,15 @@ Regression_Plot(df_SA)
 ```
 
 
+### Question 3
+
+See if you can tackle this question yourself.
+
+
+### Question 4
+
+See the Question3 folder - I get you started there on a data wrangling function.
+
+There's some nice tips and tricks in there, please go through all the lines.
+
+

@@ -1,0 +1,110 @@
+---
+output:
+  md_document:
+    variant: markdown_github
+---
+
+# Purpose
+
+Illustrate workthrough of practical question
+
+```{r}
+
+rm(list = ls()) # Clean your environment:
+gc() # garbage collection - It can be useful to call gc after a large object has been removed, as this may prompt R to return memory to the operating system.
+library(tidyverse);library(lubridate);library(rmsfuns)
+list.files('code/', full.names = T, recursive = T) %>% .[grepl('.R', .)] %>% as.list() %>% walk(~source(.))
+```
+
+
+```{r}
+
+Lst <- 
+    list.files("data/Tennis/", full.names = T) %>% 
+    .[grepl("atp_matches", .)] %>% 
+    # I don't want to look at doubles - cos Nadal no play double.
+    .[!grepl("doubles", .)] %>% as.list()
+
+# Join player info by id:
+    playerinfo <-
+        read_csv("data/Tennis/atp_players.csv") %>% select(player_id, hand, height)
+
+    # The following function reads in the player information in a concise, silent manner.
+    # My thinking here is to....
+    
+# I want to only look at Grandslams, Masters and Finals - use Tournament_Inputs to filter.
+result_Large_events <- Data_Prep_Function(Lst, Tournament_Inputs = c("G", "M", "F"))
+
+```
+
+
+Nadal vs Djokovic at grandslam and master's events: 
+
+ * against top 5 players
+ 
+ * against low-ranking players - efficiency of seeing them off
+ 
+ * Time taken, ace percentage, breakpoints won (showing BMT)
+ 
+ Let's see what we can extract from the data easily..
+ 
+ 
+```{r}
+
+# Note the function used - it has a few tips and tricks!
+
+Result <- 
+    c("Rafael Nadal", "Roger Federer", "Andy Murray", "Novak Djokovic", "Frank Tom") %>% as.list() %>% 
+    map_df(~Winsummary_Function_Compiler(result_Large_events,
+                                 Player_Name = .,
+                                 playerinfo, 
+                                 Top_N = 5,
+                                 Silent = F))
+
+Result %>% View
+
+ 
+```
+
+ 
+
+## Now - let's look at the current top ranking players, and get their stats to place Djokovic and Nadal into broader perspective:
+
+```{r}
+# Find top 100 from last Grandslam (try find this yourself with logic first...):
+Current_Top_100 <- 
+    bind_rows(
+    result_Large_events %>% filter(tourney_level == "G", date == last(date)) %>% select(winner_id, winner_rank) %>% filter(!is.na(winner_rank)) %>% purrr::set_names("ID", "rank"),
+    result_Large_events %>% filter(tourney_level == "G", date == last(date)) %>% select(loser_id, loser_rank) %>% filter(!is.na(loser_rank)) %>% purrr::set_names("ID", "rank")
+    ) %>% unique %>% arrange(rank)
+
+Players_Fetch <- 
+    left_join(Current_Top_100, 
+              result_Large_events %>% select(winner_name, winner_id) %>% unique %>% purrr::set_names("Name", "ID" ),
+              by = "ID") %>% filter(!is.na(Name)) %>% arrange(desc(rank)) %>% 
+    filter(rank <= 100)
+
+List_Fetch <- 
+    Players_Fetch %>% 
+    pull(Name) %>% as.list()
+
+Top100_Result <- 
+    List_Fetch %>% 
+    map_df(~Winsummary_Function_Compiler(result_Large_events,
+                                 Player_Name = .,
+                                 playerinfo, 
+                                 Top_N = 5,
+                                 Silent = F))
+
+
+    Top100_Result <- 
+        left_join(Top100_Result, 
+                  Players_Fetch %>% select(Player = Name, rank), by = "Player")
+
+
+Top100_Result %>% View
+
+```
+
+# Now - you can create some simple plots to do your analyses from...
+

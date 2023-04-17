@@ -55,16 +55,11 @@ gc() # garbage collection - It can be useful to call gc after a large object has
 ```
 
     ##          used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells 412466 22.1     856618 45.8   643711 34.4
-    ## Vcells 748983  5.8    8388608 64.0  1649131 12.6
+    ## Ncells 453583 24.3     973830 52.1   644242 34.5
+    ## Vcells 811305  6.2    8388608 64.0  1635362 12.5
 
 ``` r
 library(pacman)
-```
-
-    ## Warning: package 'pacman' was built under R version 4.1.2
-
-``` r
 p_load(tidyverse, lubridate)
 
 # Source in all your functions:
@@ -99,8 +94,11 @@ For the below, I had to adjust the sizes to fit into the readme a bit.
 g <- Error_bar_plot(datcolat, xaxis_size = 9, xaxis_rows = 3)
 ```
 
-    ## Warning: `guides(<scale> = FALSE)` is deprecated. Please use `guides(<scale> =
-    ## "none")` instead.
+    ## Warning: The `<scale>` argument of `guides()` cannot be `FALSE`. Use "none" instead as
+    ## of ggplot2 3.3.4.
+    ## This warning is displayed once every 8 hours.
+    ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+    ## generated.
 
 ``` r
 g
@@ -112,12 +110,7 @@ The second plot in the paper …
 
 ``` r
   g <-  Barplot_breakdown_Happy_Contributors(datcolat, Title = "Barplot making up the ladder", Subtitle = "Look at the colours - wow.", xaxis_size = 9, xaxis_rows = 3)
-```
-
-    ## Warning: `guides(<scale> = FALSE)` is deprecated. Please use `guides(<scale> =
-    ## "none")` instead.
-
-``` r
+    
 g
 ```
 
@@ -139,7 +132,7 @@ list.files('Question2/code/', full.names = T, recursive = T) %>% as.list() %>% w
 ```
 
     ## 
-    ## -- Column specification --------------------------------------------------------
+    ## ── Column specification ────────────────────────────────────────────────────────
     ## cols(
     ##   Fruits = col_character()
     ## )
@@ -165,11 +158,6 @@ Some description here would be great.
 
 ``` r
 fruit_count <- froots %>% map_df(~Fruit_extractor(dff_adj, froots = .))
-```
-
-    ## Warning: package 'xtable' was built under R version 4.1.2
-
-``` r
 g <- First_fruits_plot(fruit_count, xaxis_rows = 2, xaxis_size = 5)
 g
 ```
@@ -209,8 +197,11 @@ df_SA <-
 gg <- Top_5_Wineries_SA_Plot(df_SA, Tasters)
 ```
 
-    ## Warning: `guides(<scale> = FALSE)` is deprecated. Please use `guides(<scale> =
-    ## "none")` instead.
+    ## Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+    ## ℹ Please use `linewidth` instead.
+    ## This warning is displayed once every 8 hours.
+    ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+    ## generated.
 
 ``` r
 gg
@@ -230,3 +221,15 @@ Regression_Plot(df_SA)
     ## group_split(...)
 
 ![](README_files/figure-markdown_github/unnamed-chunk-10-1.png)
+
+### Question 3
+
+See if you can tackle this question yourself.
+
+### Question 4
+
+See the Question3 folder - I get you started there on a data wrangling
+function.
+
+There’s some nice tips and tricks in there, please go through all the
+lines.
